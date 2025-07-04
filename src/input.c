@@ -12,10 +12,10 @@ void editorProcessKeypress() {
     exit(EXIT_SUCCESS);
     break;
 
-  case 'k':
-  case 'j':
-  case 'h':
-  case 'l':
+  case ARROW_UP:
+  case ARROW_DOWN:
+  case ARROW_LEFT:
+  case ARROW_RIGHT:
     editorMoveCursor(c);
     break;
   }
@@ -23,19 +23,19 @@ void editorProcessKeypress() {
 
 void editorMoveCursor(char key) {
   switch (key) {
-  case 'h':
+  case ARROW_LEFT:
     if (E.cx != 0)
       E.cx--;
     break;
-  case 'l':
+  case ARROW_RIGHT:
     if (E.cx != E.screencols - 1)
       E.cx++;
     break;
-  case 'k':
+  case ARROW_UP:
     if (E.cy != 0)
       E.cy--;
     break;
-  case 'j':
+  case ARROW_DOWN:
     if (E.cy != E.screenrows - 1)
       E.cy++;
     break;

@@ -27,6 +27,13 @@ struct abuf {
 #define KILO_VERSION "0.0.1"
 #define ABUF_INIT {NULL, 0}
 
+enum editorKey {
+  ARROW_LEFT = 'a',
+  ARROW_RIGHT = 'd',
+  ARROW_UP = 'w',
+  ARROW_DOWN = 's',
+};
+
 /*** data ***/
 
 extern struct editorConfig E;
