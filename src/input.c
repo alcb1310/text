@@ -12,6 +12,13 @@ void editorProcessKeypress() {
     exit(EXIT_SUCCESS);
     break;
 
+  case HOME_KEY:
+    E.cx = 1;
+    break;
+  case END_KEY:
+    E.cx = E.screencols - 1;
+    break;
+
   case PAGE_UP:
   case PAGE_DOWN: {
     int times = E.screenrows;
