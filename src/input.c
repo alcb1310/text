@@ -3,7 +3,7 @@
 /*** input ***/
 
 void editorProcessKeypress() {
-  char c = editorReadKey();
+  int c = editorReadKey();
 
   switch (c) {
   case CTRL_KEY('q'):
@@ -11,6 +11,13 @@ void editorProcessKeypress() {
     write(STDOUT_FILENO, "\x1b[H", 3);
     exit(EXIT_SUCCESS);
     break;
+
+  case PAGE_UP:
+  case PAGE_DOWN: {
+    int times = E.screenrows;
+    while (times--)
+      editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+  } break;
 
   case ARROW_UP:
   case ARROW_DOWN:
@@ -21,7 +28,7 @@ void editorProcessKeypress() {
   }
 }
 
-void editorMoveCursor(char key) {
+void editorMoveCursor(int key) {
   switch (key) {
   case ARROW_LEFT:
     if (E.cx != 0)

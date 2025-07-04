@@ -4,7 +4,7 @@
 #include "defines.h"
 #include "terminal.h"
 
-void editorMoveCursor(char key);
+void editorMoveCursor(int key);
 void editorProcessKeypress();
 
 #endif
