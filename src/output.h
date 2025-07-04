@@ -1,7 +1,11 @@
 #ifndef OUTPUT_H
 #define OUTPUT_H
 
-void editorDrawRows();
+#include "append.h"
+#include "defines.h"
+#include <unistd.h>
+
+void editorDrawRows(struct abuf *ab);
 void editorRefreshScreen();
 
 #endif
