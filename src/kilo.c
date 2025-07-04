@@ -8,6 +8,9 @@
 /*** init ***/
 
 void initEditor() {
+  E.cx = 1;
+  E.cy = 0;
+
   if (getWindowSize(&E.screenrows, &E.screencols) == -1)
     die("getWindowSize");
 }
