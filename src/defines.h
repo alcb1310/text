@@ -13,6 +13,8 @@
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
+#define KILO_VERSION "0.0.1"
+
 /*** data ***/
 
 struct editorConfig {
