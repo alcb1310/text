@@ -1,28 +1,6 @@
-/*** includes ***/
-
-#include <ctype.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <unistd.h>
-
-/*** defines ***/
-
-#define CTRL_KEY(k) ((k) & 0x1f)
-
-/*** data ***/
-
-struct editorConfig {
-  int screenrows;
-  int screencols;
-  struct termios orig_termios;
-};
+#include "terminal.h"
 
 struct editorConfig E;
-
-/*** terminal ***/
 
 void die(const char *s) {
   write(STDOUT_FILENO, "\x1b[2J", 4);
@@ -100,59 +78,5 @@ int getWindowSize(int *rows, int *cols) {
 
   *rows = ws.ws_row;
   *cols = ws.ws_col;
-  return 0;
-}
-
-/*** output ***/
-
-void editorDrawRows() {
-  for (int y = 0; y < E.screenrows; y++) {
-    write(STDOUT_FILENO, " ~", 2);
-
-    if (y < E.screenrows - 1) {
-      write(STDOUT_FILENO, "\r\n", 2);
-    }
-  }
-}
-
-void editorRefreshScreen() {
-  write(STDOUT_FILENO, "\x1b[2J", 4);
-  write(STDOUT_FILENO, "\x1b[H", 3);
-
-  editorDrawRows();
-
-  write(STDOUT_FILENO, "\x1b[H", 3);
-}
-
-/*** input ***/
-
-void editorProcessKeypress() {
-  char c = editorReadKey();
-
-  switch (c) {
-  case CTRL_KEY('q'):
-    write(STDOUT_FILENO, "\x1b[2J", 4);
-    write(STDOUT_FILENO, "\x1b[H", 3);
-    exit(EXIT_SUCCESS);
-    break;
-  }
-}
-
-/*** init ***/
-
-void initEditor() {
-  if (getWindowSize(&E.screenrows, &E.screencols) == -1)
-    die("getWindowSize");
-}
-
-int main() {
-  enableRawMode();
-  initEditor();
-
-  while (1) {
-    editorRefreshScreen();
-    editorProcessKeypress();
-  }
-
   return 0;
 }

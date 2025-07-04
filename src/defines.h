@@ -1,0 +1,26 @@
+#ifndef DEFINES_H
+#define DEFINES_H
+
+#include <ctype.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
+
+/*** defines ***/
+
+#define CTRL_KEY(k) ((k) & 0x1f)
+
+/*** data ***/
+
+struct editorConfig {
+  int screenrows;
+  int screencols;
+  struct termios orig_termios;
+};
+
+extern struct editorConfig E;
+
+#endif
