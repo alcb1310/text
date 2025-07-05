@@ -66,6 +66,8 @@ int editorReadKey() {
             return PAGE_UP;
           case '6':
             return PAGE_DOWN;
+          case '3':
+            return DEL_KEY;
           }
         }
       } else {
