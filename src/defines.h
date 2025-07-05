@@ -9,10 +9,21 @@
 #include <termios.h>
 #include <unistd.h>
 
+/*** typedefs ***/
+
+typedef struct erow {
+  int size;
+  char *chars;
+} erow;
+
+/*** structs ***/
+
 struct editorConfig {
   int cx, cy;
   int screenrows;
   int screencols;
+  int numrows;
+  erow row;
   struct termios orig_termios;
 };
 
@@ -26,6 +37,8 @@ struct abuf {
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define KILO_VERSION "0.0.1"
 #define ABUF_INIT {NULL, 0}
+
+/*** enums ***/
 
 enum editorKey {
   ARROW_LEFT = 1000,

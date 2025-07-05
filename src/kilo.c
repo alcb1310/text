@@ -1,6 +1,7 @@
 /*** includes ***/
 
 #include "defines.h"
+#include "file.h"
 #include "input.h"
 #include "output.h"
 #include "terminal.h"
@@ -10,6 +11,7 @@
 void initEditor() {
   E.cx = 1;
   E.cy = 0;
+  E.numrows = 0;
 
   if (getWindowSize(&E.screenrows, &E.screencols) == -1)
     die("getWindowSize");
@@ -18,6 +20,7 @@ void initEditor() {
 int main() {
   enableRawMode();
   initEditor();
+  editorOpen();
 
   while (1) {
     editorRefreshScreen();
