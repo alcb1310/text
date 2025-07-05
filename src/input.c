@@ -4,6 +4,7 @@
 
 void editorProcessKeypress() {
   int c = editorReadKey();
+  erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
 
   switch (c) {
   case CTRL_KEY('q'):
@@ -13,10 +14,10 @@ void editorProcessKeypress() {
     break;
 
   case HOME_KEY:
-    E.cx = 1;
+    E.cx = 0;
     break;
   case END_KEY:
-    E.cx = E.screencols - 1;
+    E.cx = row ? row->size : 0;
     break;
 
   case PAGE_UP:
@@ -36,13 +37,24 @@ void editorProcessKeypress() {
 }
 
 void editorMoveCursor(int key) {
+  erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+
   switch (key) {
   case ARROW_LEFT:
-    if (E.cx != 0)
+    if (E.cx != 0) {
       E.cx--;
+    } else if (E.cy > 0) {
+      E.cy--;
+      E.cx = E.row[E.cy].size;
+    }
     break;
   case ARROW_RIGHT:
-    E.cx++;
+    if (row && E.cx < row->size) {
+      E.cx++;
+    } else if (row && E.cx == row->size) {
+      E.cy++;
+      E.cx = 0;
+    }
     break;
   case ARROW_UP:
     if (E.cy != 0)
@@ -53,4 +65,9 @@ void editorMoveCursor(int key) {
       E.cy++;
     break;
   }
+
+  row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+  int rowlen = row ? row->size : 0;
+  if (E.cx > rowlen)
+    E.cx = rowlen;
 }
