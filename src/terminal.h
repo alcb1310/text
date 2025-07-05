@@ -3,7 +3,6 @@
 
 #include "defines.h"
 
-void die(const char *s);
 void disableRawMode();
 void enableRawMode();
 int editorReadKey();
