@@ -66,14 +66,26 @@ void enableRowMode() {
    */
   raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 
+  /*
+   * c_cc field is for "special characters"
+   *
+   * - VMIN is the minimum number of characters to be read before the read()
+   *   function returns
+   * - VTIME is the maximum number of milliseconds to wait before the read()
+   *   function returns
+   */
+  raw.c_cc[VMIN] = 0;
+  raw.c_cc[VTIME] = 1;
+
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
 int main() {
   enableRowMode();
 
-  char c;
-  while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') {
+  while (1) {
+    char c = '\0';             // char is 1 byte initialized to 0
+    read(STDIN_FILENO, &c, 1); // read 1 byte from stdin and store it in c
     if (iscntrl(c)) {
       // This is a control character (0 to 31 or 127)
       // According to ASCII table
@@ -82,6 +94,10 @@ int main() {
     } else {
       // This is a printable character
       printf("%d ('%c')\r\n", c, c);
+    }
+
+    if (c == 'q') {
+      break;
     }
   }
 
