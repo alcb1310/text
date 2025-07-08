@@ -39,10 +39,11 @@ void enableRowMode() {
    *   send a SIGINT signal to the current process which causes it to terminate
    *   and CTRL-Z will send a SIGTSTP signal to the current process which causes
    *   it to suspend
+   * - IEXTEN flag is for "enable extended functions"
    *
    * The ~ operator is a bitwise NOT to disable the flags
    */
-  raw.c_lflag &= ~(ECHO | ICANON | ISIG);
+  raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
