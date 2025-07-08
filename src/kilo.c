@@ -20,9 +20,14 @@ void enableRowMode() {
   struct termios raw = orig_termios;
 
   /*
-   * ECHO feature causes each key yo type to be printed to the terminal
-   * c_lflag field is for "local flags"
    * c_iflag field is for "input flags"
+   *
+   * IXON flag is for "enable start/stop output control" disables CTRL-S and
+   * CTRL-Q default behavior
+   */
+  raw.c_iflag &= ~(IXON);
+  /*
+   * c_lflag field is for "local flags"
    * c_oflag field is for "output flags"
    * c_cflag field is for "control flags"
    *
