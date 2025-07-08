@@ -24,10 +24,12 @@ void enableRowMode() {
    * c_oflag field is for "output flags"
    * c_cflag field is for "control flags"
    *
-   * To disable ECHO, we remove the ECHO flag from the c_lflag field with a
-   * bitwise AND operation
+   * - To disable ECHO, we remove the ECHO flag from the c_lflag field with a
+   *   bitwise AND operation
+   * - ICANON flag is for "canonical mode" which is used to read one line at a
+   *   time by disableling it we will reading byte by byte
    */
-  raw.c_lflag &= ~(ECHO);
+  raw.c_lflag &= ~(ECHO | ICANON);
 
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
