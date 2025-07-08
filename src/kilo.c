@@ -28,9 +28,17 @@ void enableRowMode() {
    *   CTRL-Q default behavior
    */
   raw.c_iflag &= ~(ICRNL | IXON);
+
+  /*
+   * c_oflag field is for "output flags"
+   *
+   * - OPOST flag is for "enable output processing" to translate \n to \r\n
+   *
+   */
+  raw.c_oflag &= ~(OPOST);
+
   /*
    * c_lflag field is for "local flags"
-   * c_oflag field is for "output flags"
    * c_cflag field is for "control flags"
    *
    * - To disable ECHO, we remove the ECHO flag from the c_lflag field with a
@@ -59,10 +67,10 @@ int main() {
       // This is a control character (0 to 31 or 127)
       // According to ASCII table
       // http://asciitable.com/
-      printf("%d\n", c);
+      printf("%d\r\n", c);
     } else {
       // This is a printable character
-      printf("%d ('%c')\n", c, c);
+      printf("%d ('%c')\r\n", c, c);
     }
   }
 
