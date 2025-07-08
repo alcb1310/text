@@ -30,8 +30,14 @@ void enableRowMode() {
    *   bitwise AND operation
    * - ICANON flag is for "canonical mode" which is used to read one line at a
    *   time by disableling it we will reading byte by byte
+   * - ISIG flag is for "send signals for special keys", by default CTRL-C will
+   *   send a SIGINT signal to the current process which causes it to terminate
+   *   and CTRL-Z will send a SIGTSTP signal to the current process which causes
+   *   it to suspend
+   *
+   * The ~ operator is a bitwise NOT to disable the flags
    */
-  raw.c_lflag &= ~(ECHO | ICANON);
+  raw.c_lflag &= ~(ECHO | ICANON | ISIG);
 
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
@@ -43,8 +49,11 @@ int main() {
   while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') {
     if (iscntrl(c)) {
       // This is a control character (0 to 31 or 127)
+      // According to ASCII table
+      // http://asciitable.com/
       printf("%d\n", c);
     } else {
+      // This is a printable character
       printf("%d ('%c')\n", c, c);
     }
   }
