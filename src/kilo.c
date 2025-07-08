@@ -22,10 +22,12 @@ void enableRowMode() {
   /*
    * c_iflag field is for "input flags"
    *
-   * IXON flag is for "enable start/stop output control" disables CTRL-S and
-   * CTRL-Q default behavior
+   * - ICRNL flag is for "translate carriage-return to newline" now CTRL-M will
+   *   will be read as 13 and ENTER will be read as 10
+   * - IXON flag is for "enable start/stop output control" disables CTRL-S and
+   *   CTRL-Q default behavior
    */
-  raw.c_iflag &= ~(IXON);
+  raw.c_iflag &= ~(ICRNL | IXON);
   /*
    * c_lflag field is for "local flags"
    * c_oflag field is for "output flags"
