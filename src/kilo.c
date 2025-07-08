@@ -1,10 +1,21 @@
+#include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
 
-void enableRowMode() {
-  struct termios raw;
+struct termios orig_termios;
 
-  tcgetattr(STDIN_FILENO, &raw);
+void disableRawMode() { tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios); }
+
+void enableRowMode() {
+  tcgetattr(STDIN_FILENO, &orig_termios);
+
+  /*
+   * atexit() is a function that is called when the program exits by either
+   * finishing the program or calling the exit() function
+   */
+  atexit(disableRawMode);
+
+  struct termios raw = orig_termios;
 
   /*
    * ECHO feature causes each key yo type to be printed to the terminal
