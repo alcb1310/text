@@ -22,12 +22,16 @@ void enableRowMode() {
   /*
    * c_iflag field is for "input flags"
    *
+   * - BRKINT flag is for "send SIGINTR when receiving a break signal"
+   * - INPCK flag is for "enable parity checking"
+   * - ISTRIP flag causes the 9th bit of each input byt to be stripped, meaning
+   *   it will set it to 0
    * - ICRNL flag is for "translate carriage-return to newline" now CTRL-M will
    *   will be read as 13 and ENTER will be read as 10
    * - IXON flag is for "enable start/stop output control" disables CTRL-S and
    *   CTRL-Q default behavior
    */
-  raw.c_iflag &= ~(ICRNL | IXON);
+  raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
 
   /*
    * c_oflag field is for "output flags"
@@ -36,6 +40,13 @@ void enableRowMode() {
    *
    */
   raw.c_oflag &= ~(OPOST);
+
+  /*
+   * c_lflag field is for "local flags"
+   *
+   * - CS8 is not a flag, it is a bit mask to set the number of data bits to 8
+   */
+  raw.c_cflag |= (CS8);
 
   /*
    * c_lflag field is for "local flags"
