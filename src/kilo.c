@@ -17,6 +17,11 @@ struct termios orig_termios;
 
 /*** terminal ***/
 
+/***
+ * Prints an error message and exits
+ *
+ * @param s the error message
+ */
 void die(const char *s) {
   perror(s);
   exit(EXIT_FAILURE);
