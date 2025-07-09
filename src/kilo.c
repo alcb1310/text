@@ -6,10 +6,21 @@
 
 struct termios orig_termios;
 
-void disableRawMode() { tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios); }
+void die(const char *s) {
+  perror(s);
+  exit(EXIT_FAILURE);
+}
+
+void disableRawMode() {
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1) {
+    die("disableRawMode: tcsetattr");
+  }
+}
 
 void enableRowMode() {
-  tcgetattr(STDIN_FILENO, &orig_termios);
+  if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) {
+    die("enableRawMode: tcgetattr");
+  }
 
   /*
    * atexit() is a function that is called when the program exits by either
@@ -77,15 +88,20 @@ void enableRowMode() {
   raw.c_cc[VMIN] = 0;
   raw.c_cc[VTIME] = 1;
 
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
+    die("enableRawMode: tcsetattr");
+  }
 }
 
 int main() {
   enableRowMode();
 
   while (1) {
-    char c = '\0';             // char is 1 byte initialized to 0
-    read(STDIN_FILENO, &c, 1); // read 1 byte from stdin and store it in c
+    char c = '\0'; // char is 1 byte initialized to 0
+    if (read(STDIN_FILENO, &c, 1) == -1) {
+      // read 1 byte from stdin and store it in c
+      die("main: read");
+    }
     if (iscntrl(c)) {
       // This is a control character (0 to 31 or 127)
       // According to ASCII table
