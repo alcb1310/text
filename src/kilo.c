@@ -1,6 +1,7 @@
 /*** includes ***/
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
@@ -103,30 +104,44 @@ void enableRowMode() {
   }
 }
 
+/***
+ * Wait for a key to be pressed and return it
+ */
+char editorReadKey() {
+  int nread;
+  char c;
+
+  while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
+    if (nread == -1 && errno != EAGAIN) {
+      die("editorReadKey: read");
+    }
+  }
+
+  return c;
+}
+
+/*** input ***/
+
+/***
+ * Waits for a key press and then handles it
+ * */
+void editorProcessKeypress() {
+  char c = editorReadKey();
+
+  switch (c) {
+  case CTRL_KEY('q'):
+    exit(EXIT_SUCCESS);
+    break;
+  }
+}
+
 /*** init ***/
 
 int main() {
   enableRowMode();
 
   while (1) {
-    char c = '\0'; // char is 1 byte initialized to 0
-    if (read(STDIN_FILENO, &c, 1) == -1) {
-      // read 1 byte from stdin and store it in c
-      die("main: read");
-    }
-    if (iscntrl(c)) {
-      // This is a control character (0 to 31 or 127)
-      // According to ASCII table
-      // http://asciitable.com/
-      printf("%d\r\n", c);
-    } else {
-      // This is a printable character
-      printf("%d ('%c')\r\n", c, c);
-    }
-
-    if (c == CTRL_KEY('q')) {
-      break;
-    }
+    editorProcessKeypress();
   }
 
   return 0;
