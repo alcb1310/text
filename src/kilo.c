@@ -125,6 +125,14 @@ char editorReadKey() {
   return c;
 }
 
+/*** output ***/
+
+/***
+ * Refreshes the screen
+ * https://vt100.net/docs/vt100-ug/chapter3.html#ED
+ */
+void editorRefreshScreen() { write(STDOUT_FILENO, "\x1b[2J", 4); }
+
 /*** input ***/
 
 /***
@@ -146,6 +154,7 @@ int main() {
   enableRowMode();
 
   while (1) {
+    editorRefreshScreen();
     editorProcessKeypress();
   }
 
