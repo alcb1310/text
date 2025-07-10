@@ -14,6 +14,13 @@
 #define KILO_VERSION "0.0.1"
 #define CTRL_KEY(k) ((k) & 0x1f)
 
+enum editorKey {
+  ARROW_LEFT = 1000,
+  ARROW_RIGHT,
+  ARROW_UP,
+  ARROW_DOWN,
+};
+
 /*** data ***/
 
 struct editorConfig {
@@ -125,7 +132,7 @@ void enableRowMode() {
 /***
  * Wait for a key to be pressed and return it
  */
-char editorReadKey() {
+int editorReadKey() {
   int nread;
   char c;
 
@@ -133,6 +140,33 @@ char editorReadKey() {
     if (nread == -1 && errno != EAGAIN) {
       die("editorReadKey: read");
     }
+  }
+
+  if (c == '\x1b') {
+    char seq[3];
+
+    if (read(STDIN_FILENO, &seq[0], 1) != 1) {
+      return '\x1b';
+    }
+
+    if (read(STDIN_FILENO, &seq[1], 1) != 1) {
+      return '\x1b';
+    }
+
+    if (seq[0] == '[') {
+      switch (seq[1]) {
+      case 'A':
+        return ARROW_UP;
+      case 'B':
+        return ARROW_DOWN;
+      case 'C':
+        return ARROW_RIGHT;
+      case 'D':
+        return ARROW_LEFT;
+      }
+    }
+
+    return '\x1b';
   }
 
   return c;
@@ -287,20 +321,20 @@ void editorRefreshScreen() {
  */
 void editorMoveCursor(int key) {
   switch (key) {
-  case 'h':
+  case ARROW_LEFT:
     if (E.cx != 0) {
       E.cx--;
     }
     break;
-  case 'j':
+  case ARROW_DOWN:
     E.cy++;
     break;
-  case 'k':
+  case ARROW_UP:
     if (E.cy != 0) {
       E.cy--;
     }
     break;
-  case 'l':
+  case ARROW_RIGHT:
     E.cx++;
     break;
   }
@@ -310,7 +344,7 @@ void editorMoveCursor(int key) {
  * Waits for a key press and then handles it
  * */
 void editorProcessKeypress() {
-  char c = editorReadKey();
+  int c = editorReadKey();
 
   switch (c) {
   case 'q':
@@ -321,11 +355,24 @@ void editorProcessKeypress() {
     exit(EXIT_SUCCESS);
     break;
 
-  case 'h':
-  case 'j':
-  case 'k':
-  case 'l':
+  case ARROW_UP:
+  case ARROW_RIGHT:
+  case ARROW_DOWN:
+  case ARROW_LEFT:
     editorMoveCursor(c);
+    break;
+
+  case 'k':
+    editorMoveCursor(ARROW_UP);
+    break;
+  case 'j':
+    editorMoveCursor(ARROW_DOWN);
+    break;
+  case 'h':
+    editorMoveCursor(ARROW_LEFT);
+    break;
+  case 'l':
+    editorMoveCursor(ARROW_RIGHT);
     break;
   }
 }
