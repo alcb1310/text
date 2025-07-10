@@ -13,7 +13,11 @@
 
 /*** data ***/
 
-struct termios orig_termios;
+struct editorConfig {
+  struct termios orig_termios;
+};
+
+struct editorConfig E;
 
 /*** terminal ***/
 
@@ -31,13 +35,13 @@ void die(const char *s) {
 }
 
 void disableRawMode() {
-  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1) {
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1) {
     die("disableRawMode: tcsetattr");
   }
 }
 
 void enableRowMode() {
-  if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) {
+  if (tcgetattr(STDIN_FILENO, &E.orig_termios) == -1) {
     die("enableRawMode: tcgetattr");
   }
 
@@ -47,7 +51,7 @@ void enableRowMode() {
    */
   atexit(disableRawMode);
 
-  struct termios raw = orig_termios;
+  struct termios raw = E.orig_termios;
 
   /*
    * c_iflag field is for "input flags"
