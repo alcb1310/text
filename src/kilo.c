@@ -23,6 +23,9 @@ struct termios orig_termios;
  * @param s the error message
  */
 void die(const char *s) {
+  write(STDERR_FILENO, "\x1b[2J", 4); // clear screen
+  write(STDERR_FILENO, "\x1b[H", 3);  // cursor home
+
   perror(s);
   exit(EXIT_FAILURE);
 }
@@ -131,7 +134,10 @@ char editorReadKey() {
  * Refreshes the screen
  * https://vt100.net/docs/vt100-ug/chapter3.html#ED
  */
-void editorRefreshScreen() { write(STDOUT_FILENO, "\x1b[2J", 4); }
+void editorRefreshScreen() {
+  write(STDOUT_FILENO, "\x1b[2J", 4);
+  write(STDOUT_FILENO, "\x1b[H", 3);
+}
 
 /*** input ***/
 
@@ -143,6 +149,9 @@ void editorProcessKeypress() {
 
   switch (c) {
   case CTRL_KEY('q'):
+    write(STDOUT_FILENO, "\x1b[2J", 4); // clear screen
+    write(STDOUT_FILENO, "\x1b[H", 3);  // cursor home
+
     exit(EXIT_SUCCESS);
     break;
   }
