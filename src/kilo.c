@@ -28,10 +28,17 @@ enum editorKey {
 
 /*** data ***/
 
+typedef struct erow {
+  int size;
+  char *chars;
+} erow;
+
 struct editorConfig {
   int cx, cy;
   int screenrows;
   int screencols;
+  int numrows;
+  erow row;
   struct termios orig_termios;
 };
 
@@ -265,6 +272,22 @@ int getWindowSize(int *rows, int *cols) {
   return 0;
 }
 
+/*** file i/o ***/
+
+/***
+ * Reads a file into a buffer
+ */
+void editorOpen() {
+  char *line = "Hello world!";
+  ssize_t linelen = 13;
+
+  E.row.size = linelen;
+  E.row.chars = malloc(linelen + 1);
+  memcpy(E.row.chars, line, linelen);
+  E.row.chars[linelen] = '\0';
+  E.numrows = 1;
+}
+
 /*** append buffer ***/
 
 struct abuf {
@@ -302,29 +325,39 @@ void abFree(struct abuf *ab) { free(ab->b); }
  */
 void editorDrawRows(struct abuf *ab) {
   for (int y = 0; y < E.screenrows; y++) {
-    if (y == E.screenrows / 3) {
-      char welcome[80];
-      int welcomelen = snprintf(welcome, sizeof(welcome),
-                                "Kilo Editor -- Version %s", KILO_VERSION);
+    if (y >= E.numrows) {
 
-      if (welcomelen > E.screencols) {
-        welcomelen = E.screencols;
-      }
+      if (y == E.screenrows / 3) {
+        char welcome[80];
+        int welcomelen = snprintf(welcome, sizeof(welcome),
+                                  "Kilo Editor -- Version %s", KILO_VERSION);
 
-      int padding = (E.screencols - welcomelen) / 2;
-      if (padding) {
-        // Add some padding
+        if (welcomelen > E.screencols) {
+          welcomelen = E.screencols;
+        }
+
+        int padding = (E.screencols - welcomelen) / 2;
+        if (padding) {
+          // Add some padding
+          abAppend(ab, "~", 1);
+          padding--;
+        }
+
+        while (padding--) {
+          abAppend(ab, " ", 1);
+        }
+
+        abAppend(ab, welcome, welcomelen);
+      } else {
         abAppend(ab, "~", 1);
-        padding--;
       }
-
-      while (padding--) {
-        abAppend(ab, " ", 1);
-      }
-
-      abAppend(ab, welcome, welcomelen);
     } else {
-      abAppend(ab, "~", 1);
+      int len = E.row.size;
+      if (len > E.screencols) {
+        len = E.screencols;
+      }
+
+      abAppend(ab, E.row.chars, len);
     }
 
     abAppend(ab, "\x1b[K", 3); // clear line
@@ -459,6 +492,7 @@ void editorProcessKeypress() {
 void initEditor() {
   E.cx = 0;
   E.cy = 0;
+  E.numrows = 0;
 
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) {
     die("getWindowSize");
@@ -468,6 +502,7 @@ void initEditor() {
 int main() {
   enableRowMode();
   initEditor();
+  editorOpen();
 
   while (1) {
     editorRefreshScreen();
