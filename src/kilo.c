@@ -460,6 +460,7 @@ void editorRefreshScreen() {
  * Moves the cursor
  */
 void editorMoveCursor(int key) {
+  erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
 
   switch (key) {
   case ARROW_LEFT:
@@ -468,7 +469,9 @@ void editorMoveCursor(int key) {
     }
     break;
   case ARROW_RIGHT:
-    E.cx++;
+    if (row != NULL && E.cx < row->size) {
+      E.cx++;
+    }
     break;
   case ARROW_UP:
     if (E.cy != 0) {
@@ -480,6 +483,24 @@ void editorMoveCursor(int key) {
       E.cy++;
     }
     break;
+  }
+
+  // row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+  if (E.cy >= E.numrows) {
+    row = NULL;
+  } else {
+    row = &E.row[E.cy];
+  }
+
+  int rowlen;
+  if (row == NULL) {
+    rowlen = 0;
+  } else {
+    rowlen = row->size;
+  }
+
+  if (E.cx > rowlen) {
+    E.cx = rowlen;
   }
 }
 
