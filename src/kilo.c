@@ -41,6 +41,7 @@ typedef struct erow {
 
 struct editorConfig {
   int cx, cy;
+  int rowoff;
   int screenrows;
   int screencols;
   int numrows;
@@ -51,6 +52,7 @@ struct editorConfig {
 struct editorConfig E;
 
 /*** terminal ***/
+void disableRawMode();
 
 /***
  * Prints an error message and exits
@@ -62,6 +64,7 @@ void die(const char *s) {
   write(STDERR_FILENO, "\x1b[H", 3);  // cursor home
 
   perror(s);
+  disableRawMode();
   exit(EXIT_FAILURE);
 }
 
@@ -356,14 +359,27 @@ void abFree(struct abuf *ab) { free(ab->b); }
 
 /*** output ***/
 
+/***
+ * Scrolls vertically the screen
+ */
+void editorScroll() {
+  if (E.cy < E.rowoff) {
+    E.rowoff = E.cy;
+  }
+
+  if (E.cy >= E.rowoff + E.screenrows) {
+    E.rowoff = E.cy - E.screenrows + 1;
+  }
+}
+
 /*
  * Draws information to the screen
  */
 void editorDrawRows(struct abuf *ab) {
   for (int y = 0; y < E.screenrows; y++) {
-    if (y >= E.numrows) {
-
-      if (E.numrows == 0 && y == E.screenrows / 3) {
+    int filerow = y + E.rowoff;
+    if (filerow >= E.numrows) {
+      if (E.numrows == 0 && filerow == E.screenrows / 3) {
         char welcome[80];
         int welcomelen = snprintf(welcome, sizeof(welcome),
                                   "Kilo Editor -- Version %s", KILO_VERSION);
@@ -388,12 +404,12 @@ void editorDrawRows(struct abuf *ab) {
         abAppend(ab, "~", 1);
       }
     } else {
-      int len = E.row[y].size;
+      int len = E.row[filerow].size;
       if (len > E.screencols) {
         len = E.screencols;
       }
 
-      abAppend(ab, E.row[y].chars, len);
+      abAppend(ab, E.row[filerow].chars, len);
     }
 
     abAppend(ab, "\x1b[K", 3); // clear line
@@ -408,6 +424,8 @@ void editorDrawRows(struct abuf *ab) {
  * https://vt100.net/docs/vt100-ug/chapter3.html#ED
  */
 void editorRefreshScreen() {
+  editorScroll();
+
   struct abuf ab = ABUF_INIT;
   abAppend(&ab, "\x1b[?25l", 6); // hide cursor
   abAppend(&ab, "\x1b[H", 3);
@@ -436,7 +454,7 @@ void editorMoveCursor(int key) {
     }
     break;
   case ARROW_DOWN:
-    if (E.cx != E.screenrows - 1) {
+    if (E.cx != E.numrows) {
       E.cy++;
     }
     break;
@@ -528,6 +546,7 @@ void editorProcessKeypress() {
 void initEditor() {
   E.cx = 0;
   E.cy = 0;
+  E.rowoff = 0;
   E.numrows = 0;
   E.row = NULL;
 
