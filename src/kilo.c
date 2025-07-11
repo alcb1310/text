@@ -1,5 +1,10 @@
 /*** includes ***/
 
+// this macros will tell the includes what  features to expose
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 #include <asm-generic/ioctls.h>
 #include <errno.h>
 #include <stddef.h>
@@ -346,7 +351,7 @@ void editorDrawRows(struct abuf *ab) {
   for (int y = 0; y < E.screenrows; y++) {
     if (y >= E.numrows) {
 
-      if (y == E.screenrows / 3) {
+      if (E.numrows == 0 && y == E.screenrows / 3) {
         char welcome[80];
         int welcomelen = snprintf(welcome, sizeof(welcome),
                                   "Kilo Editor -- Version %s", KILO_VERSION);
