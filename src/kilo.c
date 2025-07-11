@@ -1,6 +1,6 @@
 /*** includes ***/
 
-// this macros will tell the includes what  features to expose
+// this macros will tell the includes what features to expose
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #define _GNU_SOURCE
@@ -18,6 +18,8 @@
 /*** defines ***/
 
 #define KILO_VERSION "0.0.1"
+#define KILO_TAB_STOPS 8
+
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 enum editorKey {
@@ -36,7 +38,9 @@ enum editorKey {
 
 typedef struct erow {
   int size;
+  int rsize;
   char *chars;
+  char *render;
 } erow;
 
 struct editorConfig {
@@ -283,6 +287,37 @@ int getWindowSize(int *rows, int *cols) {
 }
 
 /*** row operations ***/
+/***
+ * Updates the row render with tabs
+ *
+ * @param row The row to update
+ */
+void editorUpdateRow(erow *row) {
+  int tabs = 0;
+
+  for (int j = 0; j < row->size; j++) {
+    if (row->chars[j] == '\t') {
+      tabs++;
+    }
+  }
+
+  free(row->render);
+  row->render = malloc(row->size + tabs * (KILO_TAB_STOPS - 1) + 1);
+
+  int idx = 0;
+  for (int j = 0; j < row->size; j++) {
+    if (row->chars[j] == '\t') {
+      do {
+        row->render[idx++] = ' ';
+      } while (idx % KILO_TAB_STOPS != 0);
+      continue;
+    }
+    row->render[idx++] = row->chars[j];
+  }
+
+  row->render[idx] = '\0';
+  row->rsize = idx;
+}
 
 /***
  * Appends a new row to the end of the row array
@@ -295,6 +330,11 @@ void editorAppendRow(char *s, size_t len) {
   E.row[at].chars = malloc(len + 1);
   memcpy(E.row[at].chars, s, len);
   E.row[at].chars[len] = '\0';
+
+  E.row[at].rsize = 0;
+  E.row[at].render = NULL;
+  editorUpdateRow(&E.row[at]);
+
   E.numrows++;
 }
 
@@ -413,7 +453,7 @@ void editorDrawRows(struct abuf *ab) {
         abAppend(ab, "~", 1);
       }
     } else {
-      int len = E.row[filerow].size - E.coloff;
+      int len = E.row[filerow].rsize - E.coloff;
       if (len < 0) {
         len = 0;
       }
@@ -421,7 +461,7 @@ void editorDrawRows(struct abuf *ab) {
         len = E.screencols;
       }
 
-      abAppend(ab, &E.row[filerow].chars[E.coloff], len);
+      abAppend(ab, &E.row[filerow].render[E.coloff], len);
     }
 
     abAppend(ab, "\x1b[K", 3); // clear line
