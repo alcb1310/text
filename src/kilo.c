@@ -36,6 +36,8 @@ enum editorKey {
   PAGE_DOWN
 };
 
+enum editorMode { NORMAL_MODE = 1, INSERT_MODE };
+
 /*** data ***/
 
 typedef struct erow {
@@ -53,6 +55,7 @@ struct editorConfig {
   int screenrows;
   int screencols;
   int numrows;
+  enum editorMode mode;
   erow *row;
   char *filename;
   char statusmsg[80];
@@ -64,6 +67,7 @@ struct editorConfig E;
 
 /*** terminal ***/
 void disableRawMode();
+void editorSetStatusMessage(const char *fmt, ...);
 
 /***
  * Prints an error message and exits
@@ -509,7 +513,8 @@ void editorDrawStatusBar(struct abuf *ab) {
   abAppend(ab, "\x1b[7m", 4); // reverse video bg color = white && text black
 
   char lstatus[80], rstatus[80];
-  int len = snprintf(lstatus, sizeof(lstatus), " %.20s - %d lines",
+  int len = snprintf(lstatus, sizeof(lstatus), " %s %.20s - %d lines",
+                     E.mode == NORMAL_MODE ? "[NORMAL]" : "[INSERT]",
                      E.filename ? E.filename : "[No Name]", E.numrows);
   int rlen = snprintf(rstatus, sizeof(rstatus), "line %d/%d cols %d/%d",
                       E.cy + 1, E.numrows, E.rx + 1, E.row[E.cy].size + 1);
@@ -629,11 +634,11 @@ void editorMoveCursor(int key) {
 }
 
 /***
- * Waits for a key press and then handles it
+ * Waits for a key press and then handles it in normal mode
+ *
+ * @param c the key pressed
  * */
-void editorProcessKeypress() {
-  int c = editorReadKey();
-
+void editorNormalProcessKeypress(int c) {
   switch (c) {
   case 'q':
   case CTRL_KEY('q'):
@@ -694,6 +699,49 @@ void editorProcessKeypress() {
   case 'l':
     editorMoveCursor(ARROW_RIGHT);
     break;
+
+  case 'i':
+    E.mode = INSERT_MODE;
+    editorSetStatusMessage("Press ESC to enter normal mode");
+    break;
+  }
+}
+
+/***
+ * Waits for a key press and then handles it in insert mode
+ *
+ * @param c the key pressed
+ */
+void editorInsertProcessKeypress(int c) {
+  switch (c) {
+  case '\x1b': // escape
+    E.mode = NORMAL_MODE;
+    editorSetStatusMessage("HELP: (Ctrl-Q | q) = quit | (i) = Insert Mode");
+    break;
+
+  case ARROW_UP:
+  case ARROW_RIGHT:
+  case ARROW_DOWN:
+  case ARROW_LEFT:
+    editorMoveCursor(c);
+    break;
+  }
+}
+
+/***
+ * Waits for a key press and then handles it
+ */
+void editorProcessKeypress() {
+  int c = editorReadKey();
+
+  switch (E.mode) {
+  case NORMAL_MODE:
+    editorNormalProcessKeypress(c);
+    break;
+
+  case INSERT_MODE:
+    editorInsertProcessKeypress(c);
+    break;
   }
 }
 
@@ -717,6 +765,7 @@ void initEditor() {
   E.rowoff = 0;
   E.coloff = 0;
   E.numrows = 0;
+  E.mode = NORMAL_MODE;
   E.row = NULL;
   E.filename = NULL;
   E.statusmsg[0] = '\0';
@@ -736,7 +785,7 @@ int main(int argc, char *argv[]) {
     editorOpen(argv[1]);
   }
 
-  editorSetStatusMessage("HELP: Ctrl-Q | q = quit");
+  editorSetStatusMessage("HELP: (Ctrl-Q | q) = quit | (i) = Insert Mode");
 
   while (1) {
     editorRefreshScreen();
