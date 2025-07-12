@@ -397,6 +397,23 @@ void editorRowInsertChar(erow *row, int at, int c) {
   E.dirty++;
 }
 
+/***
+ * Deletes a character at the given positon
+ *
+ * @param *row The row to delete from
+ * @param at The index to delete
+ */
+void editorRowDelChar(erow *row, int at) {
+  if (at < 0 || at >= row->size) {
+    return;
+  }
+
+  memmove(&row->chars[at], &row->chars[at + 1], row->size - at);
+  row->size--;
+  editorUpdateRow(row);
+  E.dirty++;
+}
+
 /*** editor operations ***/
 /***
  * Inserts a character into the current row
@@ -410,6 +427,21 @@ void editorInsertChar(int c) {
 
   editorRowInsertChar(&E.row[E.cy], E.cx, c);
   E.cx++;
+}
+
+/***
+ * Deletes a character from the current row
+ */
+void editorDelChar() {
+  if (E.cy == E.numrows) {
+    return;
+  }
+
+  erow *row = &E.row[E.cy];
+  if (E.cx > 0) {
+    editorRowDelChar(row, E.cx - 1);
+    E.cx--;
+  }
 }
 
 /*** file i/o ***/
@@ -833,6 +865,11 @@ void editorNormalProcessKeypress(int c) {
     E.mode = INSERT_MODE;
     editorSetStatusMessage("Press ESC to enter normal mode");
     break;
+
+  case 'x':
+    editorMoveCursor(ARROW_RIGHT);
+    editorDelChar();
+    break;
   }
 }
 
@@ -857,7 +894,10 @@ void editorInsertProcessKeypress(int c) {
 
   case BACKSPACE:
   case DEL_KEY:
-    // TODO: implement
+    if (c == DEL_KEY) {
+      editorMoveCursor(ARROW_RIGHT);
+    }
+    editorDelChar();
     break;
 
   case ARROW_UP:
