@@ -45,6 +45,7 @@ typedef struct erow {
 
 struct editorConfig {
   int cx, cy;
+  int rx;
   int rowoff;
   int coloff;
   int screenrows;
@@ -288,6 +289,23 @@ int getWindowSize(int *rows, int *cols) {
 
 /*** row operations ***/
 /***
+ * Converts char index into render index
+ *
+ * @param *row Pointer to the row to convert
+ * @param cx The char index
+ */
+int editorRowToRx(erow *row, int cx) {
+  int rx = 0;
+  for (int j = 0; j < cx; j++) {
+    if (row->chars[j] == '\t') {
+      rx += (KILO_TAB_STOPS - 1) - (rx % KILO_TAB_STOPS);
+    }
+    rx++;
+  }
+  return rx;
+}
+
+/***
  * Updates the row render with tabs
  *
  * @param row The row to update
@@ -404,6 +422,11 @@ void abFree(struct abuf *ab) { free(ab->b); }
  * Scrolls vertically the screen
  */
 void editorScroll() {
+  E.rx = 0;
+  if (E.cy < E.numrows) {
+    E.rx = editorRowToRx(&E.row[E.cy], E.cx);
+  }
+
   // vertical scroll
   if (E.cy < E.rowoff) {
     E.rowoff = E.cy;
@@ -413,11 +436,11 @@ void editorScroll() {
   }
 
   // horizontal scroll
-  if (E.cx < E.coloff) {
-    E.coloff = E.cx;
+  if (E.rx < E.coloff) {
+    E.coloff = E.rx;
   }
-  if (E.cx >= E.coloff + E.screencols) {
-    E.coloff = E.cx - E.screencols + 1;
+  if (E.rx >= E.coloff + E.screencols) {
+    E.coloff = E.rx - E.screencols + 1;
   }
 }
 
@@ -486,7 +509,7 @@ void editorRefreshScreen() {
 
   char buf[32];
   snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
-           (E.cx - E.coloff) + 1);
+           (E.rx - E.coloff) + 1);
   abAppend(&ab, buf, strlen(buf));
 
   abAppend(&ab, "\x1b[?25h", 6); // show cursor
@@ -625,6 +648,7 @@ void editorProcessKeypress() {
 void initEditor() {
   E.cx = 0;
   E.cy = 0;
+  E.rx = 0;
   E.rowoff = 0;
   E.coloff = 0;
   E.numrows = 0;
