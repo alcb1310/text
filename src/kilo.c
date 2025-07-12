@@ -504,14 +504,21 @@ void editorDrawRows(struct abuf *ab) {
 void editorDrawStatusBar(struct abuf *ab) {
   abAppend(ab, "\x1b[7m", 4); // reverse video bg color = white && text black
 
-  char status[80];
-  int len = snprintf(status, sizeof(status), "%.20s - %d lines",
+  char lstatus[80], rstatus[80];
+  int len = snprintf(lstatus, sizeof(lstatus), " %.20s - %d lines",
                      E.filename ? E.filename : "[No Name]", E.numrows);
+  int rlen = snprintf(rstatus, sizeof(rstatus), "line %d/%d cols %d/%d",
+                      E.cy + 1, E.numrows, E.rx + 1, E.row[E.cy].size + 1);
   if (len > E.screencols) {
     len = E.screencols;
   }
-  abAppend(ab, status, len);
+  abAppend(ab, lstatus, len);
   while (len < E.screencols) {
+    if (E.screencols - len == rlen) {
+      abAppend(ab, rstatus, rlen);
+      break;
+    }
+
     abAppend(ab, " ", 1);
     len++;
   }
