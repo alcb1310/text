@@ -69,9 +69,12 @@ struct editorConfig {
 
 struct editorConfig E;
 
-/*** terminal ***/
+/*** prototypes ***/
+
 void disableRawMode();
 void editorSetStatusMessage(const char *fmt, ...);
+
+/*** terminal ***/
 
 /***
  * Prints an error message and exits
@@ -480,11 +483,20 @@ void editorSave() {
   // O_CREAT = create the file if it doesn't exist
   // 0644 = rw-r--r--
   int fd = open(E.filename, O_RDWR | O_CREAT, 0644);
-  ftruncate(fd, len);
-  write(fd, buf, len);
+  if (fd != 1) {
+    if (ftruncate(fd, len) != -1) {
+      if (write(fd, buf, len) != -1) {
+        close(fd);
+        free(buf);
+        editorSetStatusMessage("%d bytes written to '%s'", len, E.filename);
+        return;
+      }
+    }
 
-  close(fd);
+    close(fd);
+  }
   free(buf);
+  editorSetStatusMessage("Can't save! I/O error: %s", strerror(errno));
 }
 
 /*** append buffer ***/
