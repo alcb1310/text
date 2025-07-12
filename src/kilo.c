@@ -826,6 +826,9 @@ void editorNormalProcessKeypress(int c) {
     editorMoveCursor(ARROW_RIGHT);
     break;
 
+  case 'a':
+    editorMoveCursor(ARROW_RIGHT);
+    // fall through
   case 'i':
     E.mode = INSERT_MODE;
     editorSetStatusMessage("Press ESC to enter normal mode");
