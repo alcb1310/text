@@ -25,6 +25,7 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 enum editorKey {
+  BACKSPACE = 127,
   ARROW_LEFT = 1000,
   ARROW_RIGHT,
   ARROW_UP,
@@ -36,7 +37,7 @@ enum editorKey {
   PAGE_DOWN
 };
 
-enum editorMode { NORMAL_MODE = 1, INSERT_MODE };
+enum editorMode { NORMAL_MODE, INSERT_MODE };
 
 /*** data ***/
 
@@ -752,6 +753,18 @@ void editorInsertProcessKeypress(int c) {
   case '\x1b': // escape
     E.mode = NORMAL_MODE;
     editorSetStatusMessage("HELP: (Ctrl-Q | q) = quit | (i) = Insert Mode");
+    break;
+
+  case '\r':
+    // TODO: implement
+    break;
+
+  case CTRL_KEY('l'):
+    break;
+
+  case BACKSPACE:
+  case DEL_KEY:
+    // TODO: implement
     break;
 
   case ARROW_UP:
