@@ -8,6 +8,7 @@
 
 #include <asm-generic/ioctls.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +22,8 @@
 
 #define KILO_VERSION "0.0.1"
 #define KILO_TAB_STOPS 8
+#define DEFAULT_MESSAGE                                                        \
+  "HELP: (Ctrl-Q | q) = quit | (Ctrl-S | w) = save | (i) = Insert Mode"
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -168,6 +171,8 @@ void enableRowMode() {
 
 /***
  * Wait for a key to be pressed and return it
+ *
+ * @return the key
  */
 int editorReadKey() {
   int nread;
@@ -403,6 +408,33 @@ void editorInsertChar(int c) {
 /*** file i/o ***/
 
 /***
+ * converts rows to a string
+ *
+ * @param *buflen The length of the buffer
+ *
+ * @return the file as a string
+ */
+char *editorRowsToString(int *buflen) {
+  int totlen = 0;
+  for (int j = 0; j < E.numrows; j++) {
+    totlen += E.row[j].size + 1;
+  }
+  *buflen = totlen;
+
+  char *buf = malloc(totlen);
+  char *p = buf;
+
+  for (int j = 0; j < E.numrows; j++) {
+    memcpy(p, E.row[j].chars, E.row[j].size);
+    p += E.row[j].size;
+    *p = '\n';
+    p++;
+  }
+
+  return buf;
+}
+
+/***
  * Reads a file into a buffer
  *
  * @param filename The name of the file to open
@@ -430,6 +462,29 @@ void editorOpen(char *filename) {
 
   free(line);
   fclose(fp);
+}
+
+/***
+ * Writes the current file to disk
+ */
+void editorSave() {
+  if (E.filename == NULL) {
+    // TODO: Implement saving to a new file
+    return;
+  }
+
+  int len;
+  char *buf = editorRowsToString(&len);
+
+  // O_RDWR = open for reading and writing
+  // O_CREAT = create the file if it doesn't exist
+  // 0644 = rw-r--r--
+  int fd = open(E.filename, O_RDWR | O_CREAT, 0644);
+  ftruncate(fd, len);
+  write(fd, buf, len);
+
+  close(fd);
+  free(buf);
 }
 
 /*** append buffer ***/
@@ -688,6 +743,11 @@ void editorNormalProcessKeypress(int c) {
     // TODO: implement
     break;
 
+  case CTRL_KEY('s'):
+  case 'w':
+    editorSave();
+    break;
+
   case '0':
   case HOME_KEY:
     E.cx = 0;
@@ -752,7 +812,7 @@ void editorInsertProcessKeypress(int c) {
   switch (c) {
   case '\x1b': // escape
     E.mode = NORMAL_MODE;
-    editorSetStatusMessage("HELP: (Ctrl-Q | q) = quit | (i) = Insert Mode");
+    editorSetStatusMessage(DEFAULT_MESSAGE);
     break;
 
   case '\r':
@@ -837,7 +897,7 @@ int main(int argc, char *argv[]) {
     editorOpen(argv[1]);
   }
 
-  editorSetStatusMessage("HELP: (Ctrl-Q | q) = quit | (i) = Insert Mode");
+  editorSetStatusMessage(DEFAULT_MESSAGE);
 
   while (1) {
     editorRefreshScreen();
