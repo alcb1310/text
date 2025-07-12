@@ -25,7 +25,8 @@
 #define KILO_TAB_STOPS 2
 #define KILO_QUIT_TIMES 2
 #define DEFAULT_MESSAGE                                                        \
-  "HELP: (Ctrl-Q | q) = quit | (Ctrl-S | w) = save | (i) = Insert Mode | (Ctrl-F) = find"
+  "HELP: (Ctrl-Q | q) = quit | (Ctrl-S | w) = save | (i) = Insert Mode | "     \
+  "(Ctrl-F) = find"
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -77,7 +78,7 @@ struct editorConfig E;
 void disableRawMode();
 void editorSetStatusMessage(const char *fmt, ...);
 void editorRefreshScreen();
-char *editorPrompt(char *prompt);
+char *editorPrompt(char *prompt, void (*callback)(char *, int));
 
 /*** terminal ***/
 
@@ -329,21 +330,21 @@ int editorRowToRx(erow *row, int cx) {
 }
 
 int editorRowRxToCx(erow *row, int rx) {
-	int cur_rx =0;
+  int cur_rx = 0;
 
-	int cx;
-	for (cx =0; cx < row->size; cx++){
-		if (row->chars[cx] == '\t') {
-			cur_rx += (KILO_TAB_STOPS - 1) - (cur_rx % KILO_TAB_STOPS);
-		}
-		cur_rx ++;
+  int cx;
+  for (cx = 0; cx < row->size; cx++) {
+    if (row->chars[cx] == '\t') {
+      cur_rx += (KILO_TAB_STOPS - 1) - (cur_rx % KILO_TAB_STOPS);
+    }
+    cur_rx++;
 
-		if (cur_rx > rx){
-			return cx;
-		}
-	}
-	
-	return cx;
+    if (cur_rx > rx) {
+      return cx;
+    }
+  }
+
+  return cx;
 }
 
 /***
@@ -602,11 +603,11 @@ void editorOpen(char *filename) {
  */
 void editorSave() {
   if (E.filename == NULL) {
-    E.filename = editorPrompt("Save as: %s");
-		if (E.filename == NULL) {
-			editorSetStatusMessage("Save aborted");
-			return;
-		}
+    E.filename = editorPrompt("Save as: %s", NULL);
+    if (E.filename == NULL) {
+      editorSetStatusMessage("Save aborted");
+      return;
+    }
   }
 
   int len;
@@ -635,29 +636,32 @@ void editorSave() {
 
 /*** find ***/
 
+void editorFindCallback(char *query, int key) {
+  if (key == '\x1b' || key == '\r') {
+    // There is no need to handle the ESC key or the enter key
+    return;
+  }
+
+  for (int i = 0; i < E.numrows; i++) {
+    erow *row = &E.row[i];
+    char *match = strstr(row->render, query);
+    if (match) {
+      E.cy = i;
+      E.cx = editorRowRxToCx(row, match - row->render);
+      E.rowoff = E.numrows;
+      return;
+    }
+  }
+}
+
 /***
  * Prompts and find that prompt within the text
  */
 void editorFind() {
-	char *query = editorPrompt("Search: %s (ESC to cancel)");
-	if (query == NULL) {
-		// there is nothing to query for
-		return;
-	}
-
-	for (int i=0; i < E.numrows; i++) {
-		erow *row = &E.row[i];
-		char *match = strstr(row->render, query);
-
-		if(match) {
-			E.cy = i;
-			E.cx = editorRowRxToCx(row, match -row->render);
-			E.rowoff = E.numrows;
-			break;
-		}
-	}
-	
-	free(query);
+  char *query = editorPrompt("Search: %s (ESC to cancel)", editorFindCallback);
+  if (query) {
+    free(query);
+  }
 }
 
 /*** append buffer ***/
@@ -851,7 +855,7 @@ void editorRefreshScreen() {
  * @param *prompt the question to ask the user
  * @return a string with the user's response
  */
-char *editorPrompt(char *prompt) {
+char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
   size_t bufsize = 128;
   char *buf = malloc(bufsize);
 
@@ -863,17 +867,23 @@ char *editorPrompt(char *prompt) {
     editorRefreshScreen();
 
     int c = editorReadKey();
-		if (c == DEL_KEY || c == BACKSPACE) {
-			if (buflen != 0) {
-				buf[--buflen] = '\0';
-			}
-		} else if (c == '\x1b') {
-			editorSetStatusMessage("");
-			free(buf);
-			return NULL;
+    if (c == DEL_KEY || c == BACKSPACE) {
+      if (buflen != 0) {
+        buf[--buflen] = '\0';
+      }
+    } else if (c == '\x1b') {
+      editorSetStatusMessage("");
+      if (callback) {
+        callback(buf, c);
+      }
+      free(buf);
+      return NULL;
     } else if (c == '\r') {
       if (buflen != 0) {
         editorSetStatusMessage("");
+        if (callback) {
+          callback(buf, c);
+        }
         return buf;
       }
     } else if (!iscntrl(c) && c < 128) {
@@ -883,6 +893,10 @@ char *editorPrompt(char *prompt) {
       }
       buf[buflen++] = c;
       buf[buflen] = '\0';
+    }
+
+    if (callback) {
+      callback(buf, c);
     }
   }
 }
@@ -970,9 +984,9 @@ void editorNormalProcessKeypress(int c) {
     editorMoveCursor(ARROW_DOWN);
     break;
 
-	case CTRL_KEY('f'):
-		editorFind();
-		break;
+  case CTRL_KEY('f'):
+    editorFind();
+    break;
 
   case CTRL_KEY('s'):
   case 'w':
