@@ -1,14 +1,15 @@
 /*** includes ***/
 
 // this macros will tell the includes what features to expose
-#include <stdarg.h>
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #define _GNU_SOURCE
 
 #include <asm-generic/ioctls.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +22,7 @@
 /*** defines ***/
 
 #define KILO_VERSION "0.0.1"
-#define KILO_TAB_STOPS 8
+#define KILO_TAB_STOPS 2
 #define KILO_QUIT_TIMES 2
 #define DEFAULT_MESSAGE                                                        \
   "HELP: (Ctrl-Q | q) = quit | (Ctrl-S | w) = save | (i) = Insert Mode"
@@ -75,6 +76,8 @@ struct editorConfig E;
 
 void disableRawMode();
 void editorSetStatusMessage(const char *fmt, ...);
+void editorRefreshScreen();
+char *editorPrompt(char *prompt);
 
 /*** terminal ***/
 
@@ -581,8 +584,7 @@ void editorOpen(char *filename) {
  */
 void editorSave() {
   if (E.filename == NULL) {
-    // TODO: Implement saving to a new file
-    return;
+    E.filename = editorPrompt("Save as: %s");
   }
 
   int len;
@@ -793,6 +795,41 @@ void editorRefreshScreen() {
 }
 
 /*** input ***/
+
+/***
+ * Show a prompt for user to interact with
+ *
+ * @param *prompt the question to ask the user
+ * @return a string with the user's response
+ */
+char *editorPrompt(char *prompt) {
+  size_t bufsize = 128;
+  char *buf = malloc(bufsize);
+
+  size_t buflen = 0;
+  buf[0] = '\0';
+
+  while (1) {
+    editorSetStatusMessage(prompt, buf);
+    editorRefreshScreen();
+
+    int c = editorReadKey();
+    if (c == '\r') {
+      if (buflen != 0) {
+        editorSetStatusMessage("");
+        return buf;
+      }
+    } else if (!iscntrl(c) && c < 128) {
+      if (buflen == bufsize - 1) {
+        bufsize *= 2;
+        buf = realloc(buf, bufsize);
+      }
+      buf[buflen++] = c;
+      buf[buflen] = '\0';
+    }
+  }
+}
+
 /***
  * Moves the cursor
  */
@@ -927,6 +964,21 @@ void editorNormalProcessKeypress(int c) {
     break;
   case 'l':
     editorMoveCursor(ARROW_RIGHT);
+    break;
+
+  case 'A':
+    if (E.cy < E.numrows) {
+      E.cx = E.row[E.cy].size;
+    }
+    E.mode = INSERT_MODE;
+    editorSetStatusMessage("Press ESC to enter normal mode");
+    break;
+
+  case 'I':
+    E.cx = 0;
+    // TODO: move to the first non-space character
+    E.mode = INSERT_MODE;
+    editorSetStatusMessage("Press ESC to enter normal mode");
     break;
 
   case 'a':
