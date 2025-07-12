@@ -22,6 +22,7 @@
 
 #define KILO_VERSION "0.0.1"
 #define KILO_TAB_STOPS 8
+#define KILO_QUIT_TIMES 2
 #define DEFAULT_MESSAGE                                                        \
   "HELP: (Ctrl-Q | q) = quit | (Ctrl-S | w) = save | (i) = Insert Mode"
 
@@ -59,6 +60,7 @@ struct editorConfig {
   int screenrows;
   int screencols;
   int numrows;
+  int dirty;
   enum editorMode mode;
   erow *row;
   char *filename;
@@ -372,6 +374,7 @@ void editorAppendRow(char *s, size_t len) {
   editorUpdateRow(&E.row[at]);
 
   E.numrows++;
+  E.dirty++;
 }
 
 /***
@@ -391,6 +394,7 @@ void editorRowInsertChar(erow *row, int at, int c) {
   row->size++;
   row->chars[at] = c;
   editorUpdateRow(row);
+  E.dirty++;
 }
 
 /*** editor operations ***/
@@ -465,6 +469,8 @@ void editorOpen(char *filename) {
 
   free(line);
   fclose(fp);
+
+  E.dirty = 0;
 }
 
 /***
@@ -489,6 +495,7 @@ void editorSave() {
         close(fd);
         free(buf);
         editorSetStatusMessage("%d bytes written to '%s'", len, E.filename);
+        E.dirty = 0;
         return;
       }
     }
@@ -615,9 +622,10 @@ void editorDrawStatusBar(struct abuf *ab) {
   abAppend(ab, "\x1b[7m", 4); // reverse video bg color = white && text black
 
   char lstatus[80], rstatus[80];
-  int len = snprintf(lstatus, sizeof(lstatus), " %s %.20s - %d lines",
+  int len = snprintf(lstatus, sizeof(lstatus), " %s %.20s - %d lines %s",
                      E.mode == NORMAL_MODE ? "[NORMAL]" : "[INSERT]",
-                     E.filename ? E.filename : "[No Name]", E.numrows);
+                     E.filename ? E.filename : "[No Name]", E.numrows,
+                     E.dirty ? "(modified)" : "");
   int rlen =
       snprintf(rstatus, sizeof(rstatus), "line %d/%d cols %d/%d", E.cy + 1,
                E.numrows, E.rx + 1, E.row ? E.row[E.cy].size + 1 : 1);
@@ -742,9 +750,19 @@ void editorMoveCursor(int key) {
  * @param c the key pressed
  * */
 void editorNormalProcessKeypress(int c) {
+  static int quit_times = KILO_QUIT_TIMES;
+
   switch (c) {
   case 'q':
   case CTRL_KEY('q'):
+    if (E.dirty && quit_times > 0) {
+      editorSetStatusMessage("WARNING!!! file has unsaved changes. Press 'q' "
+                             "%d more times to quit",
+                             quit_times);
+      quit_times--;
+      return;
+    }
+
     write(STDOUT_FILENO, "\x1b[2J", 4); // clear screen
     write(STDOUT_FILENO, "\x1b[H", 3);  // cursor home
 
@@ -889,6 +907,7 @@ void initEditor() {
   E.rowoff = 0;
   E.coloff = 0;
   E.numrows = 0;
+  E.dirty = 0;
   E.mode = NORMAL_MODE;
   E.row = NULL;
   E.filename = NULL;
