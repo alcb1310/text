@@ -25,7 +25,7 @@
 #define KILO_TAB_STOPS 2
 #define KILO_QUIT_TIMES 2
 #define DEFAULT_MESSAGE                                                        \
-  "HELP: (Ctrl-Q | q) = quit | (Ctrl-S | w) = save | (i) = Insert Mode"
+  "HELP: (Ctrl-Q | q) = quit | (Ctrl-S | w) = save | (i) = Insert Mode | (Ctrl-F) = find"
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -328,6 +328,24 @@ int editorRowToRx(erow *row, int cx) {
   return rx;
 }
 
+int editorRowRxToCx(erow *row, int rx) {
+	int cur_rx =0;
+
+	int cx;
+	for (cx =0; cx < row->size; cx++){
+		if (row->chars[cx] == '\t') {
+			cur_rx += (KILO_TAB_STOPS - 1) - (cur_rx % KILO_TAB_STOPS);
+		}
+		cur_rx ++;
+
+		if (cur_rx > rx){
+			return cx;
+		}
+	}
+	
+	return cx;
+}
+
 /***
  * Updates the row render with tabs
  *
@@ -613,6 +631,33 @@ void editorSave() {
   }
   free(buf);
   editorSetStatusMessage("Can't save! I/O error: %s", strerror(errno));
+}
+
+/*** find ***/
+
+/***
+ * Prompts and find that prompt within the text
+ */
+void editorFind() {
+	char *query = editorPrompt("Search: %s (ESC to cancel)");
+	if (query == NULL) {
+		// there is nothing to query for
+		return;
+	}
+
+	for (int i=0; i < E.numrows; i++) {
+		erow *row = &E.row[i];
+		char *match = strstr(row->render, query);
+
+		if(match) {
+			E.cy = i;
+			E.cx = editorRowRxToCx(row, match -row->render);
+			E.rowoff = E.numrows;
+			break;
+		}
+	}
+	
+	free(query);
 }
 
 /*** append buffer ***/
@@ -924,6 +969,10 @@ void editorNormalProcessKeypress(int c) {
   case '\r':
     editorMoveCursor(ARROW_DOWN);
     break;
+
+	case CTRL_KEY('f'):
+		editorFind();
+		break;
 
   case CTRL_KEY('s'):
   case 'w':
