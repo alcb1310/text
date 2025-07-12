@@ -365,6 +365,40 @@ void editorAppendRow(char *s, size_t len) {
   E.numrows++;
 }
 
+/***
+ * Inserts a character into the current row
+ *
+ * @param *row The row to insert into
+ * @param at The index to insert at
+ * @param c The character to insert
+ */
+void editorRowInsertChar(erow *row, int at, int c) {
+  if (at < 0 || at > row->size) {
+    at = row->size;
+  }
+
+  row->chars = realloc(row->chars, row->size + 2);
+  memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
+  row->size++;
+  row->chars[at] = c;
+  editorUpdateRow(row);
+}
+
+/*** editor operations ***/
+/***
+ * Inserts a character into the current row
+ *
+ * @param c The character to insert
+ */
+void editorInsertChar(int c) {
+  if (E.cy == E.numrows) {
+    editorAppendRow("", 0);
+  }
+
+  editorRowInsertChar(&E.row[E.cy], E.cx, c);
+  E.cx++;
+}
+
 /*** file i/o ***/
 
 /***
@@ -725,6 +759,10 @@ void editorInsertProcessKeypress(int c) {
   case ARROW_DOWN:
   case ARROW_LEFT:
     editorMoveCursor(c);
+    break;
+
+  default:
+    editorInsertChar(c);
     break;
   }
 }
