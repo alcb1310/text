@@ -324,10 +324,14 @@ void editorUpdateSyntax(erow *row) {
 	row->hl = realloc(row->hl, row->size);
 	memset(row->hl, HL_NORMAL, row->size);
 
-	for (int i = 0; i < row->size; i++) {
-		if (isdigit(row->render[i])) {
+	int i = 0;
+	while ( i < row->rsize) {
+		char c = row->render[i];
+		
+		if(isdigit(c)) {
 			row->hl[i] = HL_NUMBER;
 		}
+		i++;
 	}
 }
 
