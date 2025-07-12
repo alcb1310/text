@@ -516,8 +516,9 @@ void editorDrawStatusBar(struct abuf *ab) {
   int len = snprintf(lstatus, sizeof(lstatus), " %s %.20s - %d lines",
                      E.mode == NORMAL_MODE ? "[NORMAL]" : "[INSERT]",
                      E.filename ? E.filename : "[No Name]", E.numrows);
-  int rlen = snprintf(rstatus, sizeof(rstatus), "line %d/%d cols %d/%d",
-                      E.cy + 1, E.numrows, E.rx + 1, E.row[E.cy].size + 1);
+  int rlen =
+      snprintf(rstatus, sizeof(rstatus), "line %d/%d cols %d/%d", E.cy + 1,
+               E.numrows, E.rx + 1, E.row ? E.row[E.cy].size + 1 : 1);
   if (len > E.screencols) {
     len = E.screencols;
   }
