@@ -5,6 +5,7 @@
 #define _BSD_SOURCE
 #define _GNU_SOURCE
 
+#include "append.h"
 #include "editor.h"
 #include "file.h"
 #include "find.h"
@@ -20,36 +21,6 @@ struct editorConfig E;
 void editorSetStatusMessage(const char *fmt, ...);
 void editorRefreshScreen();
 char *editorPrompt(char *prompt, void (*callback)(char *, int));
-
-/*** append buffer ***/
-
-struct abuf {
-  char *b;
-  int len;
-};
-
-#define ABUF_INIT {NULL, 0}
-
-/***
- * Appends a character to the buffer
- */
-void abAppend(struct abuf *ab, char *s, int len) {
-  char *new = realloc(ab->b, ab->len + len);
-
-  if (new == NULL) {
-    // Memory allocation failed
-    return;
-  }
-
-  memcpy(&new[ab->len], s, len);
-  ab->b = new;
-  ab->len += len;
-}
-
-/***
- * Free the buffer memmory
- */
-void abFree(struct abuf *ab) { free(ab->b); }
 
 /*** output ***/
 

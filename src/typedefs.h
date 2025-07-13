@@ -71,4 +71,11 @@ struct editorConfig {
 
 extern struct editorConfig E;
 
+struct abuf {
+  char *b;
+  int len;
+};
+
+#define ABUF_INIT {NULL, 0}
+
 #endif // !#ifndef TYPEDEFS_H_
