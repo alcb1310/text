@@ -1,11 +1,25 @@
 #include "syntax.h"
 #include "typedefs.h"
 #include <string.h>
+#include <unistd.h>
 
 char *C_HL_extensions[] = {".c", ".h", ".cpp", NULL};
+char *C_HL_keywords[] = {
+    "switch",    "if",        "while",    "for",      "break",   "continue",
+    "return",    "else",      "struct",   "union",    "typedef", "static",
+    "enum",      "case",      "default",  "class",    "public",  "private",
+    "protected", "virtual",   "inline",   "volatile", "const",   "goto",
+    "sizeof",    "NULL",      "extern",
+
+    "#define?",  "#include?", "#ifndef?", "#endif?",
+
+    "int|",      "long|",     "double|",  "float|",   "char|",   "unsigned|",
+    "signed|",   "void|",     NULL};
+
 struct editorSyntax HLDB[] = {{
     "c",
     C_HL_extensions,
+    C_HL_keywords,
     "//",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS,
 }};
@@ -30,6 +44,8 @@ void editorUpdateSyntax(erow *row) {
     // with no filt type defined, no syntax highlighting needed
     return;
   }
+
+  char **keywords = E.syntax->keywords;
 
   char *scs = E.syntax->singleline_comment_start;
   int scs_len = scs ? strlen(scs) : 0;
@@ -83,6 +99,42 @@ void editorUpdateSyntax(erow *row) {
       }
     }
 
+    if (prev_sep) {
+      for (int j = 0; keywords[j]; j++) {
+        int klen = strlen(keywords[j]);
+        int kw2 = keywords[j][klen - 1] == '|';
+        int kw3 = keywords[j][klen - 1] == '?';
+        if (kw2) {
+          // it is a secondary keyword
+          klen--;
+        }
+        if (kw3) {
+          // it is a tertiary keyword
+          klen--;
+        }
+
+        if (!strncmp(&row->render[i], keywords[j], klen) &&
+            is_separator(row->render[i + klen])) {
+          // This is a known keyword
+          int kwPrint = HL_KEYWORD1;
+          if (kw2) {
+            kwPrint = HL_KEYWORD2;
+          } else if (kw3) {
+            kwPrint = HL_KEYWORD3;
+          }
+
+          memset(&row->hl[i], kwPrint, klen);
+          i += klen;
+          break;
+        }
+
+        if (keywords[j] != NULL) {
+          prev_sep = 0;
+          continue;
+        }
+      }
+    }
+
     prev_sep = is_separator(c);
     i++;
   }
@@ -91,7 +143,13 @@ void editorUpdateSyntax(erow *row) {
 int editorSyntaxToColor(int hl) {
   switch (hl) {
   case HL_COMMENT:
+    return 30;
+  case HL_KEYWORD3:
     return 36;
+  case HL_KEYWORD2:
+    return 32;
+  case HL_KEYWORD1:
+    return 33;
   case HL_STRING:
     return 35;
   case HL_NUMBER:
