@@ -1,4 +1,5 @@
 #include "file.h"
+#include "input.h"
 #include "row.h"
 #include "terminal.h"
 

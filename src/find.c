@@ -1,4 +1,5 @@
 #include "find.h"
+#include "input.h"
 #include "row.h"
 
 void editorFindCallback(char *query, int key) {

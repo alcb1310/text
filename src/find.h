@@ -6,7 +6,4 @@
 void editorFindCallback(char *query, int key);
 void editorFind();
 
-// TODO: remove this functions when refactor is done
-char *editorPrompt(char *prompt, void (*callback)(char *, int));
-
 #endif // !#ifndef FIND_H_
