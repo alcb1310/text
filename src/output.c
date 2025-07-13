@@ -112,9 +112,9 @@ void editorDrawStatusBar(struct abuf *ab) {
                      E.mode == NORMAL_MODE ? "[NORMAL]" : "[INSERT]",
                      E.filename ? E.filename : "[No Name]", E.numrows,
                      E.dirty ? "(modified)" : "");
-  int rlen =
-      snprintf(rstatus, sizeof(rstatus), "line %d/%d cols %d/%d", E.cy + 1,
-               E.numrows, E.rx + 1, E.row ? E.row[E.cy].size + 1 : 1);
+  int rlen = snprintf(rstatus, sizeof(rstatus), "%s | line %d/%d cols %d/%d",
+                      E.syntax ? E.syntax->filetype : "no ft", E.cy + 1,
+                      E.numrows, E.rx + 1, E.row ? E.row[E.cy].size + 1 : 1);
   if (len > E.screencols) {
     len = E.screencols;
   }

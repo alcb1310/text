@@ -1,6 +1,7 @@
 #include "file.h"
 #include "input.h"
 #include "row.h"
+#include "syntax.h"
 #include "terminal.h"
 
 /***
@@ -42,6 +43,7 @@ void editorOpen(char *filename) {
   }
 
   E.filename = strdup(filename);
+  editorSelectSyntaxHighlight();
 
   char *line = NULL;
   size_t linecap = 0;
@@ -72,6 +74,8 @@ void editorSave() {
       editorSetStatusMessage("Save aborted");
       return;
     }
+
+    editorSelectSyntaxHighlight();
   }
 
   int len;

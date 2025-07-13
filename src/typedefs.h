@@ -42,7 +42,15 @@ enum editorMode { NORMAL_MODE, INSERT_MODE };
 
 enum editorHighlight { HL_NORMAL = 0, HL_NUMBER, HL_MATCH };
 
+#define HL_HIGHLIGHT_NUMBERS (1 << 0)
+
 /*** data ***/
+
+struct editorSyntax {
+  char *filetype;
+  char **filematch;
+  int flags;
+};
 
 typedef struct erow {
   int size;
@@ -66,6 +74,7 @@ struct editorConfig {
   char *filename;
   char statusmsg[80];
   time_t statusmsg_time;
+  struct editorSyntax *syntax;
   struct termios orig_termios;
 };
 
