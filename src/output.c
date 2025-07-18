@@ -200,9 +200,11 @@ void editorDrawSignColumn(struct abuf *ab, int numrow) {
     return;
   }
 
+  abAppend(ab, "\x1b[48;5;59m", 10);
+  abAppend(ab, "\x1b[38;5;226m", 11);
   if (numrow < E.numrows) {
     char buf[32];
-    int rowlength = snprintf(buf, sizeof(buf), "%d ", numrow + 1);
+    int rowlength = snprintf(buf, sizeof(buf), "%d", numrow + 1);
     if (rowlength > E.screencols) {
       rowlength = E.screencols;
     }
@@ -214,10 +216,15 @@ void editorDrawSignColumn(struct abuf *ab, int numrow) {
       abAppend(ab, " ", 1);
     }
     abAppend(ab, buf, rowlength);
+    abAppend(ab, "\x1b[m", 3);
     abAppend(ab, " ", 1);
   } else {
     for (int i = 0; i < KILO_SIGN_COLUMN; i++) {
+      if (i == KILO_SIGN_COLUMN - 1) {
+        abAppend(ab, "\x1b[m", 3);
+      }
       abAppend(ab, " ", 1);
     }
   }
+  abAppend(ab, "\x1b[m", 3);
 }
