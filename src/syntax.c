@@ -15,16 +15,28 @@ char *C_HL_keywords[] = {
 
     "int|",      "long|",     "double|",  "float|",   "char|",   "unsigned|",
     "signed|",   "void|",     NULL};
+char *MD_HL_extensions[] = {".md", NULL};
+char *MD_HL_keywords[] = {"#|",     "##|",     "###|", "####|",
+                          "#####|", "######|", NULL};
 
 struct editorSyntax HLDB[] = {{
-    "c",
-    C_HL_extensions,
-    C_HL_keywords,
-    "//",
-    "/*",
-    "*/",
-    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS,
-}};
+                                  "c",
+                                  C_HL_extensions,
+                                  C_HL_keywords,
+                                  "//",
+                                  "/*",
+                                  "*/",
+                                  HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS,
+                              },
+                              {
+                                  "markdown",
+                                  MD_HL_extensions,
+                                  MD_HL_keywords,
+                                  NULL,
+                                  "```",
+                                  "```",
+                                  HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS,
+                              }};
 
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
 
