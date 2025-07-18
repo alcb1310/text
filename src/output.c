@@ -2,13 +2,14 @@
 #include "append.h"
 #include "row.h"
 #include "syntax.h"
+#include "typedefs.h"
 #include <stdio.h>
 
 /***
  * Scrolls vertically the screen
  */
 void editorScroll() {
-  E.rx = 0;
+  E.rx = E.cx;
   if (E.cy < E.numrows) {
     E.rx = editorRowToRx(&E.row[E.cy], E.cx);
   }
@@ -36,6 +37,9 @@ void editorScroll() {
 void editorDrawRows(struct abuf *ab) {
   for (int y = 0; y < E.screenrows; y++) {
     int filerow = y + E.rowoff;
+
+    editorDrawSignColumn(ab, filerow);
+
     if (filerow >= E.numrows) {
       if (E.numrows == 0 && filerow == E.screenrows / 3) {
         char welcome[80];
@@ -184,4 +188,36 @@ void editorRefreshScreen() {
 
   write(STDOUT_FILENO, ab.b, ab.len);
   abFree(&ab);
+}
+
+/***
+ * Draws the sign column with the row number
+ *
+ * @param numrow current row number
+ */
+void editorDrawSignColumn(struct abuf *ab, int numrow) {
+  if (KILO_SIGN_COLUMN == 0) {
+    return;
+  }
+
+  if (numrow < E.numrows) {
+    char buf[32];
+    int rowlength = snprintf(buf, sizeof(buf), "%d ", numrow + 1);
+    if (rowlength > E.screencols) {
+      rowlength = E.screencols;
+    }
+    int len = KILO_SIGN_COLUMN - rowlength - 1;
+    if (len < 0) {
+      len = 0;
+    }
+    for (int i = 0; i < len; i++) {
+      abAppend(ab, " ", 1);
+    }
+    abAppend(ab, buf, rowlength);
+    abAppend(ab, " ", 1);
+  } else {
+    for (int i = 0; i < KILO_SIGN_COLUMN; i++) {
+      abAppend(ab, " ", 1);
+    }
+  }
 }

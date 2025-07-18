@@ -5,7 +5,7 @@
  * Initializes the program
  */
 void initEditor() {
-  E.cx = 0;
+  E.cx = KILO_SIGN_COLUMN;
   E.cy = 0;
   E.rx = 0;
   E.rowoff = 0;

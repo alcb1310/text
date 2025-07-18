@@ -22,6 +22,7 @@
 #define DEFAULT_MESSAGE                                                        \
   "HELP: (Ctrl-Q | q) = quit | (Ctrl-S | w) = save | (i) = Insert Mode | "     \
   "(Ctrl-F | /) = find"
+#define KILO_SIGN_COLUMN 5
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 

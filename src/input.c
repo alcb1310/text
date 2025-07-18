@@ -4,6 +4,7 @@
 #include "find.h"
 #include "output.h"
 #include "terminal.h"
+#include "typedefs.h"
 
 /***
  * Show a prompt for user to interact with
@@ -65,21 +66,22 @@ void editorMoveCursor(int key) {
 
   switch (key) {
   case ARROW_LEFT:
-    if (E.cx != 0) {
+    if (E.cx != KILO_SIGN_COLUMN) {
       E.cx--;
     } else if (E.cy > 0) {
       E.cy--;
-      E.cx = E.row[E.cy].size;
+      E.cx = E.row[E.cy].size + KILO_SIGN_COLUMN;
     }
     break;
-  case ARROW_RIGHT:
-    if (row != NULL && E.cx < row->size) {
+  case ARROW_RIGHT: {
+    int size = ((row) ? row->size : 0) + KILO_SIGN_COLUMN;
+    if (row != NULL && E.cx < size) {
       E.cx++;
-    } else if (row != NULL && E.cx == row->size) {
+    } else if (row != NULL && E.cx == size) {
       E.cy++;
-      E.cx = 0;
+      E.cx = KILO_SIGN_COLUMN;
     }
-    break;
+  } break;
   case ARROW_UP:
     if (E.cy != 0) {
       E.cy--;
@@ -101,9 +103,9 @@ void editorMoveCursor(int key) {
 
   int rowlen;
   if (row == NULL) {
-    rowlen = 0;
+    rowlen = KILO_SIGN_COLUMN;
   } else {
-    rowlen = row->size;
+    rowlen = row->size + KILO_SIGN_COLUMN;
   }
 
   if (E.cx > rowlen) {
@@ -152,13 +154,13 @@ void editorNormalProcessKeypress(int c) {
 
   case '0':
   case HOME_KEY:
-    E.cx = 0;
+    E.cx = KILO_SIGN_COLUMN;
     break;
 
   case '$':
   case END_KEY:
     if (E.cy < E.numrows) {
-      E.cx = E.row[E.cy].size;
+      E.cx = E.row[E.cy].size + KILO_SIGN_COLUMN;
     }
     break;
 
