@@ -39,12 +39,12 @@ enum editorKey {
   PAGE_DOWN
 };
 
-enum editorMode { NORMAL_MODE, INSERT_MODE };
+enum editorMode { NORMAL_MODE, INSERT_MODE, COMMAND_MODE };
 
 enum editorHighlight {
   HL_NORMAL = 0,
   HL_COMMENT,
-	HL_MLCOMMENT,
+  HL_MLCOMMENT,
   HL_KEYWORD1,
   HL_KEYWORD2,
   HL_KEYWORD3,
@@ -63,19 +63,19 @@ struct editorSyntax {
   char **filematch;
   char **keywords;
   char *singleline_comment_start;
-	char *multiline_comment_start;
-	char *multiline_comment_end;
+  char *multiline_comment_start;
+  char *multiline_comment_end;
   int flags;
 };
 
 typedef struct erow {
-	int idx;
+  int idx;
   int size;
   int rsize;
   char *chars;
   char *render;
   unsigned char *hl;
-	int hl_open_comment;
+  int hl_open_comment;
 } erow;
 
 struct editorConfig {

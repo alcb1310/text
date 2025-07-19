@@ -48,7 +48,7 @@ void editorFindCallback(char *query, int key) {
     if (match) {
       last_match = current;
       E.cy = current;
-      E.cx = editorRowRxToCx(row, match - row->render);
+      E.cx = editorRowRxToCx(row, match - row->render) + KILO_SIGN_COLUMN;
       E.rowoff = E.numrows;
 
       saved_hl_line = current;

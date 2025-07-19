@@ -1,4 +1,5 @@
 #include "input.h"
+#include "commands.h"
 #include "editor.h"
 #include "file.h"
 #include "find.h"
@@ -119,23 +120,10 @@ void editorMoveCursor(int key) {
  * @param c the key pressed
  * */
 void editorNormalProcessKeypress(int c) {
-  static int quit_times = KILO_QUIT_TIMES;
-
   switch (c) {
-  case 'q':
-  case CTRL_KEY('q'):
-    if (E.dirty && quit_times > 0) {
-      editorSetStatusMessage("WARNING!!! file has unsaved changes. Press 'q' "
-                             "%d more times to quit",
-                             quit_times);
-      quit_times--;
-      return;
-    }
-
-    write(STDOUT_FILENO, "\x1b[2J", 4); // clear screen
-    write(STDOUT_FILENO, "\x1b[H", 3);  // cursor home
-
-    exit(EXIT_SUCCESS);
+  case ':':
+    E.mode = COMMAND_MODE;
+    editorCommandMode();
     break;
 
   case '\r':
@@ -284,6 +272,9 @@ void editorProcessKeypress() {
   case INSERT_MODE:
     editorInsertProcessKeypress(c);
     break;
+
+  case COMMAND_MODE:
+    break;
   }
 }
 
@@ -293,4 +284,16 @@ void editorSetStatusMessage(const char *fmt, ...) {
   vsnprintf(E.statusmsg, sizeof(E.statusmsg), fmt, ap);
   va_end(ap);
   E.statusmsg_time = time(NULL);
+}
+
+void editorCommandMode() {
+  char *q = editorPrompt(":%s", NULL);
+  if (q != NULL) {
+    if (strcmp(q, "q") == 0) {
+      quit();
+    }
+    free(q);
+  }
+
+  E.mode = NORMAL_MODE;
 }

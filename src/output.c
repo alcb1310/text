@@ -122,9 +122,20 @@ void editorDrawRows(struct abuf *ab) {
 void editorDrawStatusBar(struct abuf *ab) {
   abAppend(ab, "\x1b[7m", 4); // reverse video bg color = white && text black
 
-  char lstatus[80], rstatus[80];
-  int len = snprintf(lstatus, sizeof(lstatus), " %s %.20s - %d lines %s",
-                     E.mode == NORMAL_MODE ? "[NORMAL]" : "[INSERT]",
+  char lstatus[80], rstatus[80], mode[80];
+  switch (E.mode) {
+  case INSERT_MODE:
+    snprintf(mode, sizeof(mode), "INSERT");
+    break;
+  case COMMAND_MODE:
+    snprintf(mode, sizeof(mode), "COMMAND");
+    break;
+  default:
+    snprintf(mode, sizeof(mode), "NORMAL");
+    break;
+  }
+
+  int len = snprintf(lstatus, sizeof(lstatus), " %s %.20s - %d lines %s", mode,
                      E.filename ? E.filename : "[No Name]", E.numrows,
                      E.dirty ? "(modified)" : "");
   int rlen = snprintf(rstatus, sizeof(rstatus), "%s | line %d/%d cols %d/%d",

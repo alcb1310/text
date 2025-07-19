@@ -9,5 +9,6 @@ void editorNormalProcessKeypress(int c);
 void editorInsertProcessKeypress(int c);
 void editorProcessKeypress();
 void editorSetStatusMessage(const char *fmt, ...);
+void editorCommandMode();
 
 #endif // !INPUT_H
