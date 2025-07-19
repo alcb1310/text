@@ -135,11 +135,6 @@ void editorNormalProcessKeypress(int c) {
     editorFind();
     break;
 
-  case CTRL_KEY('s'):
-  case 'w':
-    editorSave();
-    break;
-
   case '0':
   case HOME_KEY:
     E.cx = KILO_SIGN_COLUMN;
@@ -190,7 +185,7 @@ void editorNormalProcessKeypress(int c) {
 
   case 'A':
     if (E.cy < E.numrows) {
-      E.cx = E.row[E.cy].size;
+      E.cx = E.row[E.cy].size + KILO_SIGN_COLUMN;
     }
     E.mode = INSERT_MODE;
     editorSetStatusMessage("Press ESC to enter normal mode");
@@ -273,7 +268,7 @@ void editorProcessKeypress() {
     editorInsertProcessKeypress(c);
     break;
 
-  case COMMAND_MODE:
+  default:
     break;
   }
 }
@@ -290,6 +285,13 @@ void editorCommandMode() {
   char *q = editorPrompt(":%s", NULL);
   if (q != NULL) {
     if (strcmp(q, "q") == 0) {
+      quit();
+    } else if (strcmp(q, "q!") == 0) {
+      force_quit();
+    } else if (strcmp(q, "w") == 0) {
+      editorSave();
+    } else if (strcmp(q, "wq") == 0 || strcmp(q, "x") == 0) {
+      editorSave();
       quit();
     }
     free(q);
